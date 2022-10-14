@@ -110,8 +110,9 @@ accel = read_csv("./data/accel_data.csv") %>%
   pivot_longer(
     activity_1:activity_1440,
     names_to = "activity_num",
-    values_to = "activity_counts" 
+    values_to = "activity_counts"
   ) %>% 
+  mutate(activity_num = sub("activity_", "", activity_num)) %>% 
   mutate(activity_counts = as.double(activity_counts))
 ```
 
@@ -134,7 +135,7 @@ accel %>%
   ) %>% 
   pivot_wider(
     names_from = day,
-    values_from = activity_total
+    values_from = activity_total,
   ) %>% 
   select(week, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday) %>% 
   knitr::kable(digits = 2)
@@ -153,7 +154,7 @@ accel %>%
     title = "Scatterplot of activity counts for 24-hour activity time courses",
     caption = "Data come from accel_data.csv"
   ) +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0, hjust = 1))
+  theme(axis.text.x = element_text(angle = 60, vjust = 0, hjust = 1))
 ```
 
 ## Problem 3
