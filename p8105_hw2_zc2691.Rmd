@@ -74,7 +74,7 @@ instacart %>%
 
 ```
 
-Make a table showing the three most popular items in each of the aisles “baking ingredients”, “dog food care”, and “packaged vegetables fruits”. Include the number of times each item is ordered in your table.
+Below is a table showing the three most popular items in each of the aisles “baking ingredients”, “dog food care”, and “packaged vegetables fruits”.
 
 ```{r}
 instacart %>% 
@@ -87,7 +87,8 @@ instacart %>%
   knitr::kable()
 ```
 
-Make a table showing the mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered on each day of the week; format this table for human readers (i.e. produce a 2 x 7 table).
+Below is a table showing the mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered on each day of the week. 
+
 ```{r}
 instacart %>% 
   filter (product_name == "Pink Lady Apples" | product_name == "Coffee Ice Cream") %>% 
@@ -98,10 +99,11 @@ instacart %>%
     values_from = order_hour_of_day_mean
   ) %>% 
   knitr::kable()
-  
+ 
 ```
 
 ## Problem 2
+
 ```{r}
 accel = read_csv("./data/accel_data.csv") %>% 
   janitor::clean_names() %>% 
@@ -119,9 +121,11 @@ accel %>%
   mutate(wDays = factor(accel$day %in% weekdays, levels=c(FALSE, TRUE), labels=c("weekend", "weekday"))) %>% 
   select(week, day_id, day, wDays, everything())
 ```
+
 The resulting data set has `r nrow(accel)` variables and `r ncol(accel)` observations in total. The variables are `week`, `day_id`, `wDays`, `activity_num`, and `activity_counts`. `Week`, `day_id`, and `day` describes the records the observation week and day. The `activity_counts`describes activity counts for each minute of a 24-hour day starting at midnight. `wDay` is a factor variable that describes weekday vs weekend. 
 
-Traditional analyses of accelerometer data focus on the total activity over the day. Using your tidied dataset, aggregate across minutes to create a total activity variable for each day, and create a table showing these totals. !!!!!!Are any trends apparent?
+Next, the table shows the total activity counts via aggregation across minutes for each day. . Are any trends apparent? We can see that the subjective is mostly more engaged with physical activity during weekdays than druing weekends. The subject typically alternates the level of physical activity on alternate days. The total_activity for Saturday week 4 and 5 returns as 1440 results from summing up of every account count of value "1" during the whole day. The possible reason is that the subjective didn't wear/use accccelerometer on Satudays in week 4 and 4 for personal reasons.  
+
 ```{r}
 accel %>% 
   group_by(week, day) %>%
@@ -136,9 +140,11 @@ accel %>%
   knitr::kable(digits = 2)
 ```
 
-Accelerometer data allows the inspection activity over the course of the day. Make a single-panel plot that shows the 24-hour activity time courses for each day and use color to indicate day of the week. !!!!!!!Describe in words any patterns or conclusions you can make based on this graph.
+Below is a single-panel plot that shows the 24-hour activity time courses for each day and use color to indicate day of the week. !!!!!!!Describe in words any patterns or conclusions you can make based on this graph. The baseline of physical activity across one week is below 2500 every minute. The subject engaged with more physical activity early in the day during weekdays and Saturday while later in the day on Sunday. The possible reason is that the subject exercises in the morning in the first 6 days but exercises in the afternoon on Sunday. The subject is more active in approximately fixed periods of time during 24 hours throughout 5 weeks.
+
 ```{r}
 accel %>% 
+  mutate(day = forcats::fct_relevel(day, c("Monday", "Tuesday", "Wednesday", "Thursday"))) %>%
   ggplot(aes(x = activity_num, y = activity_counts, color = day)) +
   geom_point(alpha = 0.3) +
   labs(
@@ -163,7 +169,6 @@ ny_noaa =
 ny_noaa
 summary(ny_noaa)
 ```
-`ny_noaa` dataframe has 7 variables and 2,595,166 observations. Key variables include `id`: Weather station ID, `date`: Date of observation, `prcp`: Precipitation (tenths of mm), `snow`: Snowfall (mm), `snwd`: Snow depth (mm), `tmax`: Maximum temperature (tenths of degrees C), and `tmin`: Minimum temperature (tenths of degrees C). The dataframe contains many missing data. The dataset contains massive missing values because each weather station may collect only a subset of these variables. 
 
 ```{r}
 ny_noaa = 
@@ -178,6 +183,7 @@ ny_noaa =
     tmax = tmax/10,
     tmin = tmin/10)
 ```
+`ny_noaa` dataframe has `r nrow(ny_noaa)` rows and `r ncol(ny_noaa)` columns, with `r ncol(ny_noaa)` core variables for all New York state weather stations from January 1, 1981 through December 31, 2010. Key variables include `id`: Weather station ID, `year`, `month`, `day`: Date of observation, `prcp`: Precipitation (tenths of mm), `snow`: Snowfall (mm), `snwd`: Snow depth (mm), `tmax`: Maximum temperature (C), and `tmin`: Minimum temperature (C). The dataframe contains many missing data. The dataset contains massive missing values because each weather station may collect only a subset of these variables. 
 
 ```{r}
 ny_noaa %>% 
@@ -191,7 +197,7 @@ ny_noaa %>%
 
 The most commonly observed values is 0 because for the majority of time during a year in most places, it didn't snow. Snow only occurred in winter so in spring, summer, and fall, it wasn't likely to snow and the snow fall would be 0. 
 
-Make a two-panel plot showing the average max temperature in January and in July in each station across years. !!!!! Is there any observable / interpretable structure? Any outliers?
+Below is two-panel plot showing the average max temperature in January and in July in each station across years. The general pattern average maximumd daily temperature in each station is similar across years 1981-2010. We see a fluctuations between -10C and 10 C in January and 20C to ~32C where the line graph is darkest due to overlying. The notible outlier in January is in 1982 where the average max daily temperature is much below -10C. The outlier in July is in 1988 where the average max temperature is below 15C.
 ```{r}
 ny_noaa %>% 
   filter(month %in% c("January","July")) %>% 
@@ -211,7 +217,7 @@ ny_noaa %>%
   theme(legend.position = "bottom")
 ```
 
-Make a two-panel plot showing (i) tmax vs tmin for the full dataset (note that a scatterplot may not be the best option); and (ii) make a plot showing the distribution of snowfall values greater than 0 and less than 100 separately by year.
+Next is a two-panel plot showing (i) tmax vs tmin for the full dataset (note that a scatterplot may not be the best option); and (ii) make a plot showing the distribution of snowfall values greater than 0 and less than 100 separately by year.
 ```{r}
 tmax_tmin_p =
 ny_noaa %>% 
