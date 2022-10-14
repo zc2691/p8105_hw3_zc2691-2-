@@ -1,0 +1,246 @@
+---
+title: "p8105_hw2_zc2691"
+output: html_document
+date: "2022-10-14"
+---
+
+---
+title: "p8105_hw3_zc2691"
+output: github_document
+date: "2022-10-11"
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(ggridges)
+library(patchwork)
+
+library(p8105.datasets)
+
+knitr::opts_chunk$set(
+	echo = TRUE,
+	warning = FALSE,
+	fig.width = 8, 
+  fig.height = 6,
+  out.width = "90%"
+)
+
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
+
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+
+scale_colour_discrete = scale_colour_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
+```
+
+## Problem 1
+```{r}
+data("instacart")
+
+instacart = 
+  instacart %>% 
+  as_tibble(instacart)
+```
+
+```{r}
+summary(instacart)
+instacart[1,]
+```
+
+This dataset contains `r nrow(instacart)` rows and `r ncol(instacart)` columns, with each row resprenting a single product from an instacart order. Variables include identifiers for user, order, and product; the order in which each product was added to the cart. There are several order-level variables, describing the day and time of the order, and number of days since prior order. Then there are several item-specific variables, describing the product name (e.g. Yogurt, Avocado), department (e.g. dairy and eggs, produce), and aisle (e.g. yogurt, fresh fruits), and whether the item has been ordered by this user in the past. In total, there are `r instacart %>% select(product_id) %>% distinct %>% count` products found in `r instacart %>% select(user_id, order_id) %>% distinct %>% count` orders from `r instacart %>% select(user_id) %>% distinct %>% count` distinct users.
+
+Below is a table summarizing the number of items ordered from aisle. In total, there are 134 aisles, with fresh vegetables and fresh fruits holding the most items ordered by far.
+
+```{r}
+instacart %>% 
+  count(aisle) %>% 
+  arrange(desc(n))
+```
+
+Next is a plot that shows the number of items ordered in each aisle. Here, aisles are ordered by ascending number of items.
+
+```{r}
+instacart %>% 
+  count(aisle) %>% 
+  filter(n > 10000) %>% 
+  mutate(aisle = fct_reorder(aisle, n)) %>% 
+  ggplot(aes(x = aisle, y = n)) + 
+  geom_point() + 
+  labs(title = "Number of items ordered in each aisle") +
+  theme(axis.text.x = element_text(angle = 60, hjust = 1))
+
+```
+
+Make a table showing the three most popular items in each of the aisles “baking ingredients”, “dog food care”, and “packaged vegetables fruits”. Include the number of times each item is ordered in your table.
+
+```{r}
+instacart %>% 
+  filter (aisle == "baking ingredients" | aisle == "dog food care" | aisle == "packaged vegetables fruits") %>% 
+  group_by(aisle) %>% 
+  count(product_name) %>% 
+  mutate(rank = min_rank(desc(n))) %>% 
+  filter(rank < 4) %>% 
+  arrange(desc(n)) %>%
+  knitr::kable()
+```
+
+Make a table showing the mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered on each day of the week; format this table for human readers (i.e. produce a 2 x 7 table).
+```{r}
+instacart %>% 
+  filter (product_name == "Pink Lady Apples" | product_name == "Coffee Ice Cream") %>% 
+  group_by(product_name, order_dow) %>% 
+  summarize(order_hour_of_day_mean = mean(order_hour_of_day)) %>% 
+  pivot_wider(
+    names_from = order_dow,
+    values_from = order_hour_of_day_mean
+  ) %>% 
+  knitr::kable()
+  
+```
+
+## Problem 2
+```{r}
+accel = read_csv("./data/accel_data.csv") %>% 
+  janitor::clean_names() %>% 
+  pivot_longer(
+    activity_1:activity_1440,
+    names_to = "activity_num",
+    values_to = "activity_counts" 
+  ) %>% 
+  mutate(activity_counts = as.double(activity_counts))
+```
+
+```{r}
+weekdays = c('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday') 
+accel %>% 
+  mutate(wDays = factor(accel$day %in% weekdays, levels=c(FALSE, TRUE), labels=c("weekend", "weekday"))) %>% 
+  select(week, day_id, day, wDays, everything())
+```
+The resulting data set has `r nrow(accel)` variables and `r ncol(accel)` observations in total. The variables are `week`, `day_id`, `wDays`, `activity_num`, and `activity_counts`. `Week`, `day_id`, and `day` describes the records the observation week and day. The `activity_counts`describes activity counts for each minute of a 24-hour day starting at midnight. `wDay` is a factor variable that describes weekday vs weekend. 
+
+Traditional analyses of accelerometer data focus on the total activity over the day. Using your tidied dataset, aggregate across minutes to create a total activity variable for each day, and create a table showing these totals. !!!!!!Are any trends apparent?
+```{r}
+accel %>% 
+  group_by(week, day) %>%
+  summarize(
+     activity_total = sum(activity_counts)
+  ) %>% 
+  pivot_wider(
+    names_from = day,
+    values_from = activity_total
+  ) %>% 
+  select(week, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday) %>% 
+  knitr::kable(digits = 2)
+```
+
+Accelerometer data allows the inspection activity over the course of the day. Make a single-panel plot that shows the 24-hour activity time courses for each day and use color to indicate day of the week. !!!!!!!Describe in words any patterns or conclusions you can make based on this graph.
+```{r}
+accel %>% 
+  ggplot(aes(x = activity_num, y = activity_counts, color = day)) +
+  geom_point(alpha = 0.3) +
+  labs(
+    x = "minutes",
+    y = "activity_counts",
+    title = "Scatterplot of activity counts for 24-hour activity time courses",
+    caption = "Data come from accel_data.csv"
+  ) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0, hjust = 1))
+```
+
+## Problem 3
+```{r}
+library(p8105.datasets)
+data("ny_noaa")
+ny_noaa = 
+  ny_noaa %>% 
+  as_tibble(ny_noaa)
+```
+
+```{r}
+ny_noaa
+summary(ny_noaa)
+```
+`ny_noaa` dataframe has 7 variables and 2,595,166 observations. Key variables include `id`: Weather station ID, `date`: Date of observation, `prcp`: Precipitation (tenths of mm), `snow`: Snowfall (mm), `snwd`: Snow depth (mm), `tmax`: Maximum temperature (tenths of degrees C), and `tmin`: Minimum temperature (tenths of degrees C). The dataframe contains many missing data. The dataset contains massive missing values because each weather station may collect only a subset of these variables. 
+
+```{r}
+ny_noaa = 
+  ny_noaa %>% 
+  janitor::clean_names() %>% 
+  separate(date, c("year", "month", "day")) %>% 
+  mutate(month = as.numeric(month)) %>% 
+  mutate(month = month.name[month]) %>% 
+  mutate(tmax = as.double(tmax)) %>% 
+  mutate(tmin = as.double(tmin)) %>% 
+  mutate(
+    tmax = tmax/10,
+    tmin = tmin/10)
+```
+
+```{r}
+ny_noaa %>% 
+  group_by(snow) %>% 
+  summarize(
+    n_obs = n()
+  ) %>% 
+  mutate(snow_rank = min_rank(desc(n_obs))) %>% 
+  filter (snow_rank == 1) 
+```
+
+The most commonly observed values is 0 because for the majority of time during a year in most places, it didn't snow. Snow only occurred in winter so in spring, summer, and fall, it wasn't likely to snow and the snow fall would be 0. 
+
+Make a two-panel plot showing the average max temperature in January and in July in each station across years. !!!!! Is there any observable / interpretable structure? Any outliers?
+```{r}
+ny_noaa %>% 
+  filter(month %in% c("January","July")) %>% 
+  group_by(month, year, id) %>% 
+  summarize(
+    tmax_mean = mean(tmax, na.rm = TRUE)
+  ) %>% 
+  ggplot(aes(x = year, y = tmax_mean, group = id)) +
+  geom_line() +
+  facet_grid(. ~month) +
+  labs(
+    x = "Year",
+    y = "Average Max Daily Temp (C)",
+    title = "Average Max Temp (C) in each station"
+  ) +
+  theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
+  theme(legend.position = "bottom")
+```
+
+Make a two-panel plot showing (i) tmax vs tmin for the full dataset (note that a scatterplot may not be the best option); and (ii) make a plot showing the distribution of snowfall values greater than 0 and less than 100 separately by year.
+```{r}
+tmax_tmin_p =
+ny_noaa %>% 
+  ggplot(aes(x = tmin, y = tmax))+
+  geom_line(data = ny_noaa) +
+  labs(
+    x = "Minimum Daily Temp(C)",
+    y = "Maximum Daily Temp(C)",
+    title = "Line plot of daily temp extremes",
+  ) +
+  theme(legend.position = "none")
+
+snow_p = 
+  ny_noaa %>% 
+  filter (snow > 0 & snow < 100) %>% 
+  group_by(year) %>% 
+  ggplot(aes(x = snow, y = year)) +
+  geom_density_ridges() +
+  labs(
+    x = "Snowfall(mm)",
+    y = "Maximum Daily Temp(C)",
+    title = "Distribution of snowfall (0-100mm) by year",
+  ) +
+  theme(legend.position = "none")
+
+tmax_tmin_p + snow_p
+```
+
+
+
+
+
