@@ -1,6 +1,6 @@
 ---
 title: "p8105_hw2_zc2691"
-output: html_document
+output: github_document
 date: "2022-10-14"
 ---
 
