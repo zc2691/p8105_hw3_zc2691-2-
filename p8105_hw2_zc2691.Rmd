@@ -125,8 +125,7 @@ accel %>%
 
 The resulting data set has `r nrow(accel)` variables and `r ncol(accel)` observations in total. The variables are `week`, `day_id`, `wDays`, `activity_num`, and `activity_counts`. `Week`, `day_id`, and `day` describes the records the observation week and day. The `activity_counts`describes activity counts for each minute of a 24-hour day starting at midnight. `wDay` is a factor variable that describes weekday vs weekend. 
 
-Next, the table shows the total activity counts via aggregation across minutes for each day. . Are any trends apparent? We can see that the subjective is mostly more engaged with physical activity during weekdays than druing weekends. The subject typically alternates the level of physical activity on alternate days. The total_activity for Saturday week 4 and 5 returns as 1440 results from summing up of every account count of value "1" during the whole day. The possible reason is that the subjective didn't wear/use accccelerometer on Satudays in week 4 and 4 for personal reasons.  
-
+Next, the table shows the total activity counts via aggregation across minutes for each day.The subject typically alternates the level of physical activity every other day. In other words, he/she is more active on one day and less active on the next day. The total_activity for Saturday week 4 and 5 returns as 1440 results from summing up of every account count of value "1" during the whole day. The possible reason is that the subjective didn't wear/use accelerometer on Saturdays in week 4 and 4 for personal reasons.
 ```{r}
 accel %>% 
   group_by(week, day) %>%
@@ -141,20 +140,20 @@ accel %>%
   knitr::kable(digits = 2)
 ```
 
-Below is a single-panel plot that shows the 24-hour activity time courses for each day and use color to indicate day of the week. !!!!!!!Describe in words any patterns or conclusions you can make based on this graph. The baseline of physical activity across one week is below 2500 every minute. The subject engaged with more physical activity early in the day during weekdays and Saturday while later in the day on Sunday. The possible reason is that the subject exercises in the morning in the first 6 days but exercises in the afternoon on Sunday. The subject is more active in approximately fixed periods of time during 24 hours throughout 5 weeks.
+Below is a single-panel plot that shows the 24-hour activity time courses for each day and use color to indicate day of the week. The baseline of physical activity across one week is below 2500 every minute. The subject engaged with more physical activity early in the day on weekdays while later in the day on Sundays. The possible reason is that the subject exercises in the mornings on weekdays while exercises in the afternoons and evenings on Sundays. The subject is active in approximately fixed periods of time everyday in 5 weeks.
 
 ```{r}
 accel %>% 
   mutate(day = forcats::fct_relevel(day, c("Monday", "Tuesday", "Wednesday", "Thursday"))) %>%
   ggplot(aes(x = activity_num, y = activity_counts, color = day)) +
-  geom_point(alpha = 0.3) +
+  geom_line(alpha = 0.5) +
   labs(
     x = "minutes",
     y = "activity_counts",
-    title = "Scatterplot of activity counts for 24-hour activity time courses",
+    title = "Line plot of activity counts for 24-hour activity time courses",
     caption = "Data come from accel_data.csv"
   ) +
-  theme(axis.text.x = element_text(angle = 60, vjust = 0, hjust = 1))
+  theme(axis.text.x = element_blank(), legend.position = "bottom")
 ```
 
 ## Problem 3
@@ -184,7 +183,8 @@ ny_noaa =
     tmax = tmax/10,
     tmin = tmin/10)
 ```
-`ny_noaa` dataframe has `r nrow(ny_noaa)` rows and `r ncol(ny_noaa)` columns, with `r ncol(ny_noaa)` core variables for all New York state weather stations from January 1, 1981 through December 31, 2010. Key variables include `id`: Weather station ID, `year`, `month`, `day`: Date of observation, `prcp`: Precipitation (tenths of mm), `snow`: Snowfall (mm), `snwd`: Snow depth (mm), `tmax`: Maximum temperature (C), and `tmin`: Minimum temperature (C). The dataframe contains many missing data. The dataset contains massive missing values because each weather station may collect only a subset of these variables. 
+
+`ny_noaa` dataframe has `r nrow(ny_noaa)` rows and `r ncol(ny_noaa)` columns, with `r ncol(ny_noaa)` core variables for all New York state weather stations from January 1, 1981 through December 31, 2010. Key variables include `id`: Weather station ID, `year`, `month`, `day`: Date of observation, `prcp`: Precipitation (tenths of mm), `snow`: Snowfall (mm), `snwd`: Snow depth (mm), `tmax`: Maximum temperature (C), and `tmin`: Minimum temperature (C). The dataset contains massive missing values because each weather station may collect only a subset of these variables. 
 
 ```{r}
 ny_noaa %>% 
@@ -198,7 +198,8 @@ ny_noaa %>%
 
 The most commonly observed values is 0 because for the majority of time during a year in most places, it didn't snow. Snow only occurred in winter so in spring, summer, and fall, it wasn't likely to snow and the snow fall would be 0. 
 
-Below is two-panel plot showing the average max temperature in January and in July in each station across years. The general pattern average maximumd daily temperature in each station is similar across years 1981-2010. We see a fluctuations between -10C and 10 C in January and 20C to ~32C where the line graph is darkest due to overlying. The notible outlier in January is in 1982 where the average max daily temperature is much below -10C. The outlier in July is in 1988 where the average max temperature is below 15C.
+Below is two-panel plot showing the average max temperature in January and in July in each station across years. The general pattern of average maximum daily temperature in each station is similar across years 1981-2010. We see a fluctuations between -10C and 10C in January and between 20C to ~32C in June where the line graph is darkest due to overlying. The notable outlier in January is in 1982 where the average max daily temperature is much lower than -10C. The outlier in July is in 1988 where the average max temperature is below 15C.
+
 ```{r}
 ny_noaa %>% 
   filter(month %in% c("January","July")) %>% 
@@ -214,22 +215,22 @@ ny_noaa %>%
     y = "Average Max Daily Temp (C)",
     title = "Average Max Temp (C) in each station"
   ) +
-  theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
-  theme(legend.position = "bottom")
+  theme(axis.text.x = element_text(angle = 60, hjust = 1)) 
 ```
 
 Next is a two-panel plot showing (i) tmax vs tmin for the full dataset (note that a scatterplot may not be the best option); and (ii) make a plot showing the distribution of snowfall values greater than 0 and less than 100 separately by year.
+
 ```{r}
 tmax_tmin_p =
 ny_noaa %>% 
   ggplot(aes(x = tmin, y = tmax))+
-  geom_line(data = ny_noaa) +
+  geom_hex(data = ny_noaa) +
   labs(
     x = "Minimum Daily Temp(C)",
     y = "Maximum Daily Temp(C)",
-    title = "Line plot of daily temp extremes",
+    title = "Hex plot of daily temp extremes",
   ) +
-  theme(legend.position = "none")
+  theme(legend.position = "bottom")
 
 snow_p = 
   ny_noaa %>% 
@@ -242,7 +243,7 @@ snow_p =
     y = "Maximum Daily Temp(C)",
     title = "Distribution of snowfall (0-100mm) by year",
   ) +
-  theme(legend.position = "none")
+  theme(legend.position = "bottom")
 
 tmax_tmin_p + snow_p
 ```
